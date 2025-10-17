@@ -1,6 +1,11 @@
-import exampleIconUrl from "./noun-paperclip-7598668-00449F.png";
 import "./style.css";
 
 document.body.innerHTML = `
-  <p>Example image asset: <img src="${exampleIconUrl}" class="icon" /></p>
+  <h1>Sticker Sketchpad</h1> 
 `;
+
+const canvas = document.createElement("canvas");
+canvas.height = 256;
+canvas.width = 256;
+
+document.body.appendChild(canvas);
