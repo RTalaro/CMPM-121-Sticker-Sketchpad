@@ -10,33 +10,61 @@ const clear = document.getElementById("clear")!;
 const canvas = document.createElement("canvas");
 canvas.height = 256;
 canvas.width = 256;
-
 document.body.appendChild(canvas);
 
 const area = canvas.getContext("2d")!;
-const cursor = { active: false, x: 0, y: 0 };
+
+let strokes: Array<Array<Array<number>>> = [];
+let currStroke: Array<Array<number>> = [];
+const mouse = { active: false, x: 0, y: 0 };
+
+const drawingChanged = new Event("drawing-changed");
+canvas.addEventListener("drawing-changed", redraw);
 
 canvas.addEventListener("mousedown", (e) => {
-  cursor.active = true;
-  cursor.x = e.offsetX;
-  cursor.y = e.offsetY;
+  mouse.active = true;
+  mouse.x = e.offsetX;
+  mouse.y = e.offsetY;
+  currStroke = [];
+  strokes.push(currStroke);
+  const point: Array<number> = [mouse.x, mouse.y];
+  currStroke.push(point);
+  canvas.dispatchEvent(drawingChanged);
 });
 
 canvas.addEventListener("mousemove", (e) => {
-  if (cursor.active) {
-    area.beginPath();
-    area.moveTo(cursor.x, cursor.y);
-    area.lineTo(e.offsetX, e.offsetY);
-    area.stroke();
-    cursor.x = e.offsetX;
-    cursor.y = e.offsetY;
+  if (mouse.active) {
+    mouse.x = e.offsetX;
+    mouse.y = e.offsetY;
+    strokes.push(currStroke);
+    const point: Array<number> = [mouse.x, mouse.y];
+    currStroke.push(point);
+    canvas.dispatchEvent(drawingChanged);
   }
 });
 
 canvas.addEventListener("mouseup", () => {
-  cursor.active = false;
+  mouse.active = false;
+  strokes.push([]);
+  canvas.dispatchEvent(drawingChanged);
 });
 
 clear.addEventListener("click", () => {
   area.clearRect(0, 0, canvas.width, canvas.height);
+  strokes = [];
 });
+
+function redraw() {
+  area.clearRect(0, 0, canvas.width, canvas.height);
+  for (const stroke of strokes) {
+    if (stroke.length > 1) {
+      area.beginPath();
+      const [x, y] = stroke[0];
+      area.moveTo(x, y);
+      for (const [x, y] of stroke) {
+        area.lineTo(x, y);
+      }
+    }
+    area.stroke();
+  }
+}
