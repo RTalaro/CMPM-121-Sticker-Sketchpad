@@ -28,8 +28,8 @@ const area = canvas.getContext("2d")!;
 const mouse = { active: false, x: 0, y: 0 };
 const drawingChanged = new Event("drawing-changed");
 
-let redoList: number[][][] = [];
-let displayList: number[][][] = [];
+const redoList: number[][][] = [];
+const displayList: number[][][] = [];
 let currStroke: number[][] = [];
 
 canvas.addEventListener("drawing-changed", redraw);
@@ -38,13 +38,11 @@ canvas.addEventListener("mousedown", (e) => {
   mouse.active = true;
   mouse.x = e.offsetX;
   mouse.y = e.offsetY;
-  currStroke.splice(0, currStroke.length);
-  currStroke = [];
-  displayList.push(currStroke);
+  currStroke.splice(0, redoList.length);
   const point: number[] = [mouse.x, mouse.y];
   currStroke.push(point);
+  displayList.push(currStroke);
   redoList.splice(0, redoList.length);
-  redoList = [];
   canvas.dispatchEvent(drawingChanged);
 });
 
@@ -67,8 +65,9 @@ canvas.addEventListener("mouseup", () => {
 clear.addEventListener("click", () => {
   area.clearRect(0, 0, canvas.width, canvas.height);
   displayList.splice(0, displayList.length);
-  displayList = [];
+  currStroke.splice(0, currStroke.length);
   redoList.splice(0, redoList.length);
+  canvas.dispatchEvent(drawingChanged);
 });
 
 undo.addEventListener("click", () => {
@@ -96,7 +95,7 @@ function redraw() {
       for (const [x, y] of stroke) {
         area.lineTo(x, y);
       }
+      area.stroke();
     }
-    area.stroke();
   }
 }
